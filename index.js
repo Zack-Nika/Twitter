@@ -15,17 +15,18 @@ import {
 } from 'discord.js';
 
 // —— CONFIG ——
-
-// —— CONFIG ——
-const BOT_TOKEN           = process.env.BOT_TOKEN;        // ← add this
+// Make sure in your Railway/.env these are set to the pure snowflake values,
+// e.g. COMPOSER_CHANNEL_ID=1401334102019276850 (no leading '=' or quotes)
 const COMPOSER_CHANNEL_ID = process.env.COMPOSER_CHANNEL_ID;
 const FEED_CHANNEL_ID     = process.env.FEED_CHANNEL_ID;
 const WEBHOOK_ID          = process.env.WEBHOOK_ID;
 const WEBHOOK_TOKEN       = process.env.WEBHOOK_TOKEN;
+const BOT_TOKEN           = process.env.BOT_TOKEN;
+
 // Only allow the 🔃 reaction—others get removed
 const ALLOWED_EMOJIS = ['🔃'];
 
-// Load the dark template (we’ll create this shortly)
+// Load the dark template
 const tplDark = fs.readFileSync('tweet-template-dark.html', 'utf8');
 
 // Discord client + webhook
@@ -77,7 +78,6 @@ client.once('ready', async () => {
       .setCustomId('open_dark')
       .setLabel('⚫️ Dark Tweet')
       .setStyle(ButtonStyle.Primary);
-
     await composer.send({
       content: '**Compose your tweet**',
       components: [ new ActionRowBuilder().addComponents(darkBtn) ]
@@ -113,7 +113,7 @@ client.on('interactionCreate', async i => {
       timeZone:'Africa/Casablanca'
     });
 
-    // Random metrics
+    // Random metrics for realism
     const comments = Math.floor(Math.random()*500 + 50);
     const retweets = Math.floor(Math.random()*2000 + 200);
     const likes    = Math.floor(Math.random()*8000 + 500);
