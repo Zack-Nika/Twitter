@@ -3,140 +3,176 @@
 <head>
   <meta charset="UTF-8">
   <style>
-    /* PAGE & CARD */
     body {
       margin: 0;
-      background: #000;              /* true black */
+      background: #000;
       font-family: "Segoe UI", sans-serif;
     }
     .tweet-card {
-      background: transparent;       /* no border/background */
+      position: relative;
+      background: #15202b;
+      color: #e1e8ed;
+      border: 1px solid #38444d;
+      border-radius: 16px;
       width: 1500px;
-      padding: 64px;
+      padding: 56px;
     }
-    /* HEADER */
+
+    /* “More” menu (top‐right) */
+    .menu {
+      position: absolute;
+      top: 24px;
+      right: 24px;
+      width: 32px;
+      height: 32px;
+      cursor: pointer;
+    }
+    .menu circle {
+      fill: #8899a6;
+    }
+
+    /* Header */
     .header {
       display: flex;
       align-items: center;
       margin-bottom: 40px;
     }
     .avatar {
-      width: 144px;
-      height: 144px;
+      width: 120px;
+      height: 120px;
       border-radius: 50%;
-      margin-right: 48px;
+      margin-right: 40px;
     }
     .user-info {
       display: flex;
       flex-direction: column;
-      line-height: 1;
     }
-    .name {
+    .user-info .name {
+      display: inline-block;
       font-weight: 700;
       font-size: 48px;
-      color: #fff;                   /* bright white */
-      display: flex;
-      align-items: center;
+      color: #ffffff;
     }
-    .name .badge {
-      width: 24px;
-      height: 24px;
-      margin-left: 8px;
-      fill: #1da1f2;                 /* blue check */
-    }
-    .handle {
-      margin-top: 4px;
-      font-size: 24px;
-      color: #8899a6;                /* bluish-gray */
-    }
-    /* TWEET TEXT */
-    .content {
-      font-size: 56px;
-      color: #fff;
-      margin-bottom: 32px;
-      line-height: 1.2;
-      white-space: pre-wrap;
-      word-break: break-word;
-      max-width: 1400px;
-    }
-    /* TIMESTAMP */
-    .timestamp {
-      font-size: 24px;
-      color: #555;                   /* medium gray */
-      margin-bottom: 48px;
-    }
-    /* ACTION BAR */
-    .actions {
-      display: flex;
-      align-items: center;
-      gap: 64px;
-    }
-    .action {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      color: #555;                   /* icon & count color */
-      font-size: 24px;
-    }
-    .action svg {
+    .user-info .badge {
       width: 32px;
       height: 32px;
-      stroke: currentColor;
-      fill: none;
-      stroke-width: 2;
+      vertical-align: middle;
+      margin-left: 8px;
+      fill: #1da1f2;
+    }
+    .user-info .handle {
+      margin-top: 8px;
+      font-size: 36px;
+      color: #8899a6;
+    }
+
+    /* Tweet text */
+    .content {
+      font-size: 60px;
+      line-height: 1.3;
+      white-space: pre-wrap;
+      overflow-wrap: break-word;
+      word-break: break-word;
+      max-width: 1300px;
+      margin-bottom: 40px;
+    }
+
+    /* Timestamp */
+    .timestamp {
+      font-size: 40px;
+      color: #8899a6;
+      margin-bottom: 48px;
+    }
+
+    /* Stats */
+    .stats {
+      border-top: 1px solid #38444d;
+      padding-top: 48px;
+    }
+    .stats-left {
+      display: flex;
+      align-items: center;
+    }
+    .stats-left span {
+      display: inline-flex;
+      align-items: center;
+      margin-right: 56px;
+      font-size: 32px;
+      color: #8899a6;
+    }
+    .stats-left svg.icon {
+      width: 28px;
+      height: 28px;
+      margin-right: 8px;
+      fill: #8899a6;
     }
   </style>
 </head>
 <body>
   <div class="tweet-card">
+    <!-- More menu (⋯) -->
+    <svg viewBox="0 0 24 24" class="menu">
+      <circle cx="5" cy="12" r="2"/>
+      <circle cx="12" cy="12" r="2"/>
+      <circle cx="19" cy="12" r="2"/>
+    </svg>
+
+    <!-- Header -->
     <div class="header">
       <img src="{{AVATAR_URL}}" class="avatar" />
       <div class="user-info">
         <div class="name">
           {{DISPLAY_NAME}}
           {{#if VERIFIED}}
-          <!-- verification badge SVG -->
-          <svg class="badge" viewBox="0 0 24 24">
-            <path d="M22 12l-2 2-5-5-5 5-2-2 7-7z"/>
-          </svg>
+            <!-- Verified badge -->
+            <svg viewBox="0 0 24 24" class="badge">
+              <g>
+                <path d="M22.25 12c0-...Z"/>
+              </g>
+            </svg>
           {{/if}}
         </div>
         <div class="handle">@{{HANDLE}}</div>
       </div>
     </div>
 
+    <!-- Tweet text -->
     <div class="content">{{TEXT}}</div>
+
+    <!-- Timestamp -->
     <div class="timestamp">{{TIME}} · {{DATE}}</div>
 
-    <div class="actions">
-      <!-- Reply -->
-      <div class="action">
-        <svg viewBox="0 0 24 24"><path d="M14 9v3h5v5h-5v3l-7-7z"/></svg>
-        <span>{{COMMENTS}}</span>
-      </div>
-      <!-- Retweet -->
-      <div class="action">
-        <svg viewBox="0 0 24 24"><path d="M23 7l-3-3-3 3m3-3v12"/><path d="M1 17l3 3 3-3m-3 3V5"/></svg>
-        <span>{{RETWEETS}}</span>
-      </div>
-      <!-- Like -->
-      <div class="action">
-        <svg viewBox="0 0 24 24"><path d="M12 21s-6-4.35-6-10a6 6 0 0 1 12 0c0 5.65-6 10-6 10z"/></svg>
-        <span>{{LIKES}}</span>
-      </div>
-      <!-- Share -->
-      <div class="action">
-        <svg viewBox="0 0 24 24"><path d="M4 12v7h16v-7"/><path d="M12 16V2m0 0l-4 4m4-4l4 4"/></svg>
-      </div>
-      <!-- Views -->
-      <div class="action">
-        <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-        <span>{{VIEWS}}</span>
-      </div>
-      <!-- Shares -->
-      <div class="action">
-        <svg viewBox="0 0 24 24"><path d="M4 12v7h16v-7"/><path d="M16 6l-4-4-4 4"/></svg>
-        <span>{{SHARES}}</span>
+    <!-- Stats row -->
+    <div class="stats">
+      <div class="stats-left">
+        <!-- Comments -->
+        <span>
+          <svg viewBox="0 0 24 24" class="icon reply">
+            <g><path d="M18.277 3H5.723A2.724...Z"/></g>
+          </svg>
+          {{COMMENTS}}
+        </span>
+        <!-- Retweets -->
+        <span>
+          <svg viewBox="0 0 24 24" class="icon retweet">
+            <g><path d="M23 7v4a1 1...Z"/></g>
+          </svg>
+          {{RETWEETS}}
+        </span>
+        <!-- Likes -->
+        <span>
+          <svg viewBox="0 0 24 24" class="icon like">
+            <g><path d="M12 21.638l-1.114...Z"/></g>
+          </svg>
+          {{LIKES}}
+        </span>
+        <!-- Shares -->
+        <span>
+          <svg viewBox="0 0 24 24" class="icon share">
+            <g><path d="M18 16.08c-0.76...Z"/></g>
+          </svg>
+          {{SHARES}}
+        </span>
       </div>
     </div>
   </div>
