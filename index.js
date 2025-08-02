@@ -16,11 +16,12 @@ import {
 
 // —— CONFIG ——
 
+// —— CONFIG ——
+const BOT_TOKEN           = process.env.BOT_TOKEN;        // ← add this
 const COMPOSER_CHANNEL_ID = process.env.COMPOSER_CHANNEL_ID;
 const FEED_CHANNEL_ID     = process.env.FEED_CHANNEL_ID;
 const WEBHOOK_ID          = process.env.WEBHOOK_ID;
 const WEBHOOK_TOKEN       = process.env.WEBHOOK_TOKEN;
-
 // Only allow the 🔃 reaction—others get removed
 const ALLOWED_EMOJIS = ['🔃'];
 
