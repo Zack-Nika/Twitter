@@ -5,33 +5,17 @@
   <style>
     body {
       margin: 0;
-      background: #000;
+      background: #000;                /* full-black background like X */
       font-family: "Segoe UI", sans-serif;
     }
     .tweet-card {
-      position: relative;
-      background: #15202b;
-      color: #e1e8ed;
-      border: 1px solid #38444d;
+      background: #0f1419;             /* card dark */
+      color: #e1e8ed;                  /* text light */
       border-radius: 16px;
       width: 1500px;
       padding: 56px;
+      position: relative;
     }
-
-    /* “More” menu (top‐right) */
-    .menu {
-      position: absolute;
-      top: 24px;
-      right: 24px;
-      width: 32px;
-      height: 32px;
-      cursor: pointer;
-    }
-    .menu circle {
-      fill: #8899a6;
-    }
-
-    /* Header */
     .header {
       display: flex;
       align-items: center;
@@ -41,32 +25,35 @@
       width: 120px;
       height: 120px;
       border-radius: 50%;
-      margin-right: 40px;
+      margin-right: 32px;
     }
     .user-info {
       display: flex;
       flex-direction: column;
+      flex-grow: 1;
     }
     .user-info .name {
-      display: inline-block;
-      font-weight: 700;
       font-size: 48px;
-      color: #ffffff;
+      font-weight: 700;
+      color: #fff;                     /* pure white for name */
+      display: flex;
+      align-items: center;
     }
-    .user-info .badge {
-      width: 32px;
-      height: 32px;
-      vertical-align: middle;
-      margin-left: 8px;
-      fill: #1da1f2;
+    .user-info .name img.badge {
+      width: 40px;
+      height: 40px;
+      margin-left: 12px;
     }
     .user-info .handle {
-      margin-top: 8px;
       font-size: 36px;
       color: #8899a6;
+      margin-top: 4px;
     }
-
-    /* Tweet text */
+    .timestamp {
+      font-size: 40px;
+      color: #8899a6;
+      margin-bottom: 48px;
+    }
     .content {
       font-size: 60px;
       line-height: 1.3;
@@ -76,103 +63,82 @@
       max-width: 1300px;
       margin-bottom: 40px;
     }
-
-    /* Timestamp */
-    .timestamp {
-      font-size: 40px;
-      color: #8899a6;
-      margin-bottom: 48px;
-    }
-
-    /* Stats */
-    .stats {
-      border-top: 1px solid #38444d;
-      padding-top: 48px;
-    }
-    .stats-left {
+    .footer {
       display: flex;
       align-items: center;
+      border-top: 1px solid #38444d;
+      padding-top: 32px;
     }
-    .stats-left span {
-      display: inline-flex;
+    .footer .stats {
+      display: flex;
+      gap: 64px;
+      flex-grow: 1;
+    }
+    .footer .stats .item {
+      display: flex;
       align-items: center;
-      margin-right: 56px;
       font-size: 32px;
       color: #8899a6;
     }
-    .stats-left svg.icon {
-      width: 28px;
-      height: 28px;
-      margin-right: 8px;
-      fill: #8899a6;
+    .footer .stats .item img {
+      width: 32px;
+      height: 32px;
+      margin-right: 12px;
+    }
+    .footer .actions {
+      display: flex;
+      gap: 32px;
+    }
+    .footer .actions img {
+      width: 32px;
+      height: 32px;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
   <div class="tweet-card">
-    <!-- More menu (⋯) -->
-    <svg viewBox="0 0 24 24" class="menu">
-      <circle cx="5" cy="12" r="2"/>
-      <circle cx="12" cy="12" r="2"/>
-      <circle cx="19" cy="12" r="2"/>
-    </svg>
-
-    <!-- Header -->
     <div class="header">
-      <img src="{{AVATAR_URL}}" class="avatar" />
+      <img src="icons/avatar.jpg" class="avatar" alt="Avatar" />
+
       <div class="user-info">
         <div class="name">
           {{DISPLAY_NAME}}
           {{#if VERIFIED}}
-            <!-- Verified badge -->
-            <svg viewBox="0 0 24 24" class="badge">
-              <g>
-                <path d="M22.25 12c0-...Z"/>
-              </g>
-            </svg>
+            <img src="icons/badge.svg" class="badge" alt="Verified badge"/>
           {{/if}}
         </div>
         <div class="handle">@{{HANDLE}}</div>
       </div>
+
+      <!-- three-dots “more” menu in top right -->
+      <img src="icons/menu.svg" alt="More" />
     </div>
 
-    <!-- Tweet text -->
     <div class="content">{{TEXT}}</div>
-
-    <!-- Timestamp -->
     <div class="timestamp">{{TIME}} · {{DATE}}</div>
 
-    <!-- Stats row -->
-    <div class="stats">
-      <div class="stats-left">
-        <!-- Comments -->
-        <span>
-          <svg viewBox="0 0 24 24" class="icon reply">
-            <g><path d="M18.277 3H5.723A2.724...Z"/></g>
-          </svg>
-          {{COMMENTS}}
-        </span>
-        <!-- Retweets -->
-        <span>
-          <svg viewBox="0 0 24 24" class="icon retweet">
-            <g><path d="M23 7v4a1 1...Z"/></g>
-          </svg>
-          {{RETWEETS}}
-        </span>
-        <!-- Likes -->
-        <span>
-          <svg viewBox="0 0 24 24" class="icon like">
-            <g><path d="M12 21.638l-1.114...Z"/></g>
-          </svg>
-          {{LIKES}}
-        </span>
-        <!-- Shares -->
-        <span>
-          <svg viewBox="0 0 24 24" class="icon share">
-            <g><path d="M18 16.08c-0.76...Z"/></g>
-          </svg>
-          {{SHARES}}
-        </span>
+    <div class="footer">
+      <div class="stats">
+        <div class="item">
+          <img src="icons/reply.svg" alt="Comments"/> {{COMMENTS}}
+        </div>
+        <div class="item">
+          <img src="icons/retweet.svg" alt="Retweets"/> {{RETWEETS}}
+        </div>
+        <div class="item">
+          <img src="icons/like.svg" alt="Likes"/> {{LIKES}}
+        </div>
+        <div class="item">
+          <img src="icons/share.svg" alt="Shares"/> {{SHARES}}
+        </div>
+        <div class="item">
+          <img src="icons/views.svg" alt="Views"/> {{VIEWS}}
+        </div>
+      </div>
+
+      <div class="actions">
+        <!-- any other action icons you want up here -->
       </div>
     </div>
   </div>
