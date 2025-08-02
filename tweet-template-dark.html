@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body {
+      margin: 0;
+      background: #000;               /* pure black background */
+      font-family: "Segoe UI", sans-serif;
+    }
+    .tweet-card {
+      background: #15202b;             /* Twitter dark card */
+      color: #e1e8ed;                  /* light text */
+      border: 1px solid #38444d;
+      border-radius: 16px;
+      width: 1500px;
+      padding: 56px;
+      overflow: visible;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 40px;
+    }
+    .avatar {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      margin-right: 40px;
+    }
+    .user-info {
+      display: flex;
+      flex-direction: column;
+    }
+    .user-info .name {
+      font-weight: 700;
+      font-size: 48px;
+      color: #fff;                     /* pure white for display name */
+    }
+    .user-info .handle {
+      margin-top: 8px;
+      color: #8899a6;                  /* muted grey for handle */
+      font-size: 36px;
+    }
+    .verified-badge {
+      width: 42px;
+      height: 42px;
+      margin-left: 8px;
+    }
+    .follow-btn {
+      margin-left: auto;
+      background: #1da1f2;
+      color: #fff;
+      border: none;
+      border-radius: 9999px;
+      padding: 14px 36px;
+      font-size: 28px;
+      cursor: pointer;
+    }
+    .content {
+      margin: 60px 0 40px;
+      font-size: 60px;
+      line-height: 1.3;
+      white-space: pre-wrap;
+      overflow-wrap: break-word;
+      max-width: 1300px;
+    }
+    .timestamp {
+      color: #8899a6;
+      font-size: 40px;
+      margin-bottom: 48px;
+    }
+    .stats {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid #38444d;
+      padding-top: 48px;
+    }
+    .stats-left span {
+      margin-right: 64px;
+      font-size: 32px;
+      color: #8899a6;
+    }
+    .reacting-avatars img {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      margin-left: -16px;
+      border: 3px solid #15202b;
+    }
+  </style>
+</head>
+<body>
+  <div class="tweet-card">
+    <div class="header">
+      <img src="{{AVATAR_URL}}" class="avatar" />
+      <div class="user-info">
+        <div class="name">{{DISPLAY_NAME}}</div>
+        <div style="display:flex; align-items:center;">
+          <div class="handle">@{{HANDLE}}</div>
+          <img src="https://abs.twimg.com/a/1693253299/img/t1/web_legacy_blue_verified_badge.svg"
+               class="verified-badge" alt="Verified" />
+        </div>
+      </div>
+      <button class="follow-btn">Follow</button>
+    </div>
+    <div class="content">{{TWEET_TEXT}}</div>
+    <div class="timestamp">{{TIME}} · {{DATE}}</div>
+    <div class="stats">
+      <div class="stats-left">
+        <span>{{COMMENTS}} Comments</span>
+        <span>{{RETWEETS}} Retweets</span>
+        <span>{{LIKES}} Likes</span>
+        <span>{{VIEWS}} Views</span>
+        <span>{{SHARES}} Shares</span>
+      </div>
+      <div class="reacting-avatars">{{REACTING_AVATARS_HTML}}</div>
+    </div>
+  </div>
+</body>
+</html>
