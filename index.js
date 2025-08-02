@@ -15,12 +15,11 @@ import {
 } from 'discord.js';
 
 // —— CONFIG ——
-// Replace these with your new bot’s IDs & token:
-const BOT_TOKEN           = process.env.BOT_TOKEN;
-const COMPOSER_CHANNEL_ID = 'YOUR_COMPOSER_CHANNEL_ID';
-const FEED_CHANNEL_ID     = 'YOUR_FEED_CHANNEL_ID';
-const WEBHOOK_ID          = 'YOUR_WEBHOOK_ID';
-const WEBHOOK_TOKEN       = 'YOUR_WEBHOOK_TOKEN';
+
+const COMPOSER_CHANNEL_ID = process.env.COMPOSER_CHANNEL_ID;
+const FEED_CHANNEL_ID     = process.env.FEED_CHANNEL_ID;
+const WEBHOOK_ID          = process.env.WEBHOOK_ID;
+const WEBHOOK_TOKEN       = process.env.WEBHOOK_TOKEN;
 
 // Only allow the 🔃 reaction—others get removed
 const ALLOWED_EMOJIS = ['🔃'];
