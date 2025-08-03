@@ -3,142 +3,64 @@
 <head>
   <meta charset="UTF-8">
   <style>
-    body {
-      margin: 0;
-      background: #000;                /* full-black background like X */
-      font-family: "Segoe UI", sans-serif;
-    }
-    .tweet-card {
-      background: #0f1419;             /* card dark */
-      color: #e1e8ed;                  /* text light */
-      border-radius: 16px;
-      width: 1500px;
-      padding: 56px;
-      position: relative;
-    }
-    .header {
-      display: flex;
-      align-items: center;
-      margin-bottom: 40px;
-    }
-    .avatar {
-      width: 120px;
-      height: 120px;
-      border-radius: 50%;
-      margin-right: 32px;
-    }
-    .user-info {
-      display: flex;
-      flex-direction: column;
-      flex-grow: 1;
-    }
-    .user-info .name {
-      font-size: 48px;
-      font-weight: 700;
-      color: #fff;                     /* pure white for name */
-      display: flex;
-      align-items: center;
-    }
-    .user-info .name img.badge {
-      width: 40px;
-      height: 40px;
-      margin-left: 12px;
-    }
-    .user-info .handle {
-      font-size: 36px;
-      color: #8899a6;
-      margin-top: 4px;
-    }
-    .timestamp {
-      font-size: 40px;
-      color: #8899a6;
-      margin-bottom: 48px;
-    }
-    .content {
-      font-size: 60px;
-      line-height: 1.3;
-      white-space: pre-wrap;
-      overflow-wrap: break-word;
-      word-break: break-word;
-      max-width: 1300px;
-      margin-bottom: 40px;
-    }
-    .footer {
-      display: flex;
-      align-items: center;
-      border-top: 1px solid #38444d;
-      padding-top: 32px;
-    }
-    .footer .stats {
-      display: flex;
-      gap: 64px;
-      flex-grow: 1;
-    }
-    .footer .stats .item {
-      display: flex;
-      align-items: center;
-      font-size: 32px;
-      color: #8899a6;
-    }
-    .footer .stats .item img {
-      width: 32px;
-      height: 32px;
-      margin-right: 12px;
-    }
-    .footer .actions {
-      display: flex;
-      gap: 32px;
-    }
-    .footer .actions img {
-      width: 32px;
-      height: 32px;
-      cursor: pointer;
-    }
+    body { margin:0; background:#000; font-family:"Segoe UI",sans-serif; }
+    .tweet-card { position:relative; background:#000; color:#fff; border-radius:16px; width:1500px; padding:40px; }
+    .ellipsis { position:absolute; top:24px; right:24px; }
+    .ellipsis img { width:32px; height:32px; }
+    .header { display:flex; align-items:center; margin-bottom:32px; }
+    .avatar { width:120px; height:120px; border-radius:50%; margin-right:32px; }
+    .user-info { display:flex; flex-direction:column; }
+    .display-name { font-size:48px; font-weight:700; color:#fff; display:inline-block; vertical-align:middle; }
+    .verify { width:32px; height:32px; vertical-align:middle; margin-left:8px; }
+    .handle { font-size:36px; color:#8899a6; margin-top:4px; }
+    .stats { display:flex; gap:64px; border-top:1px solid #222; padding-top:32px; }
+    .stats div { display:flex; align-items:center; }
+    .stats img { width:40px; height:40px; }
+    .stats span { margin-left:8px; font-size:32px; color:#8899a6; }
   </style>
 </head>
 <body>
   <div class="tweet-card">
-    <div class="header">
-      <img src="icons/avatar.jpg" class="avatar" alt="Avatar" />
-
-      <div class="user-info">
-        <div class="name">
-          {{DISPLAY_NAME}}
-          {{#if VERIFIED}}
-            <img src="icons/badge.svg" class="badge" alt="Verified badge"/>
-          {{/if}}
-        </div>
-        <div class="handle">@{{HANDLE}}</div>
-      </div>
-
-      <!-- three-dots “more” menu in top right -->
-      <img src="icons/menu.svg" alt="More" />
+    <!-- ellipsis menu -->
+    <div class="ellipsis">
+      <img src="icons/ellipsis.svg" alt="More…"/>
     </div>
 
-    <div class="content">{{TEXT}}</div>
-    <div class="timestamp">{{TIME}} · {{DATE}}</div>
-
-    <div class="footer">
-      <div class="stats">
-        <div class="item">
-          <img src="icons/reply.svg" alt="Comments"/> {{COMMENTS}}
+    <!-- header -->
+    <div class="header">
+      <img src="{{AVATAR_URL}}" class="avatar" alt="Avatar"/>
+      <div class="user-info">
+        <div>
+          <span class="display-name">{{DISPLAY_NAME}}</span>
+          <img src="icons/verified.svg" class="verify" alt="Verified badge"/>
         </div>
-        <div class="item">
-          <img src="icons/retweet.svg" alt="Retweets"/> {{RETWEETS}}
-        </div>
-        <div class="item">
-          <img src="icons/like.svg" alt="Likes"/> {{LIKES}}
-        </div>
-        <div class="item">
-          <img src="icons/share.svg" alt="Shares"/> {{SHARES}}
-        </div>
-        <div class="item">
-          <img src="icons/views.svg" alt="Views"/> {{VIEWS}}
-        </div>
+        <span class="handle">@{{HANDLE}}</span>
       </div>
+    </div>
 
-      <div class="actions">
-        <!-- any other action icons you want up here -->
+    <!-- tweet text, timestamp, etc… -->
+
+    <!-- stats row -->
+    <div class="stats">
+      <div>
+        <img src="icons/comment.svg" alt="Comments"/>
+        <span>{{COMMENTS}}</span>
+      </div>
+      <div>
+        <img src="icons/retweet.svg" alt="Retweets"/>
+        <span>{{RETWEETS}}</span>
+      </div>
+      <div>
+        <img src="icons/like.svg" alt="Likes"/>
+        <span>{{LIKES}}</span>
+      </div>
+      <div>
+        <img src="icons/view.svg" alt="Views"/>
+        <span>{{VIEWS}}</span>
+      </div>
+      <div>
+        <img src="icons/share.svg" alt="Shares"/>
+        <span>{{SHARES}}</span>
       </div>
     </div>
   </div>
