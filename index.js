@@ -14,22 +14,22 @@ import {
   WebhookClient
 } from 'discord.js';
 
-// —— CONFIG ——
+// —— CONFIG ——  
 const BOT_TOKEN           = process.env.BOT_TOKEN;
 const COMPOSER_CHANNEL_ID = process.env.COMPOSER_CHANNEL_ID;
 const FEED_CHANNEL_ID     = process.env.FEED_CHANNEL_ID;
 const WEBHOOK_ID          = process.env.WEBHOOK_ID;
 const WEBHOOK_TOKEN       = process.env.WEBHOOK_TOKEN;
 
-// Only allow the 🔃 reaction—others get removed
+// Only allow the 🔃 reaction—others get removed  
 const ALLOWED_EMOJIS = ['🔃'];
 
-// Load the dark HTML template
-const tplDark = fs.readFileSync('tweet-template-dark.html', 'utf8');
+// Load the dark template  
+const tplDark = fs.readFileSync('tweet-template-dark.html','utf8');
 
 const client = new Client({
-  intents: [ GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessageReactions ],
-  partials: [ Partials.Message, Partials.Channel, Partials.Reaction ]
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessageReactions],
+  partials: [Partials.Message, Partials.Channel, Partials.Reaction]
 });
 const hook = new WebhookClient({ id: WEBHOOK_ID, token: WEBHOOK_TOKEN });
 
@@ -41,6 +41,7 @@ function fmt(n) {
 }
 
 async function generateImage(data) {
+  // Insert all placeholders into the template
   const html = tplDark
     .replace(/{{AVATAR_URL}}/g,   data.avatarUrl)
     .replace(/{{DISPLAY_NAME}}/g, data.displayName)
@@ -52,11 +53,16 @@ async function generateImage(data) {
     .replace(/{{RETWEETS}}/g,     fmt(data.retweets))
     .replace(/{{LIKES}}/g,        fmt(data.likes))
     .replace(/{{VIEWS}}/g,        fmt(data.views))
-    .replace(/{{SHARES}}/g,       fmt(data.shares));
+    .replace(/{{SHARES}}/g,       fmt(data.shares))
+    .replace(/{{BADGE}}/g,
+      data.verified
+        ? `<img src="${data.badgeUrl}" class="verify" />`
+        : ''
+    );
 
   const browser = await puppeteer.launch({
     args: ['--no-sandbox','--disable-setuid-sandbox'],
-    defaultViewport: { width: 1500, height: 1500, deviceScaleFactor: 3 }
+    defaultViewport: { width: 1200, height: 800, deviceScaleFactor: 2 }
   });
   const page = await browser.newPage();
   await page.setContent(html, { waitUntil: 'networkidle0' });
@@ -73,10 +79,13 @@ client.once('ready', async () => {
       .setCustomId('open_dark')
       .setLabel('⚫️ Dark Tweet')
       .setStyle(ButtonStyle.Primary);
-    await composer.send({
-      content: '**Compose your tweet**',
-      components: [ new ActionRowBuilder().addComponents(darkBtn) ]
-    }).then(m => m.pin());
+
+    await composer
+      .send({
+        content: '**Compose your tweet**',
+        components: [new ActionRowBuilder().addComponents(darkBtn)]
+      })
+      .then(m => m.pin());
   }
 });
 
@@ -97,30 +106,33 @@ client.on('interactionCreate', async interaction => {
   if (interaction.isModalSubmit() && interaction.customId === 'tweet_dark') {
     await interaction.deferReply({ ephemeral: true });
 
+    // Capture local time/date in Casablanca
     const now = new Date();
     const time = now.toLocaleTimeString('en-GB', {
       hour12: false, hour: '2-digit', minute: '2-digit',
       timeZone: 'Africa/Casablanca'
     });
     const date = now.toLocaleDateString('en-GB', {
-      day:'2-digit', month:'2-digit', year:'numeric',
-      timeZone:'Africa/Casablanca'
+      day: '2-digit', month: '2-digit', year: 'numeric',
+      timeZone: 'Africa/Casablanca'
     });
 
-    // Generate some realistic random stats
-    const comments = Math.floor(Math.random() * 500 + 20);
+    // Random metrics for realism
+    const comments = Math.floor(Math.random() * 500 + 50);
     const retweets = Math.floor(Math.random() * 2000 + 100);
-    const likes    = Math.floor(Math.random() * 8000 + 300);
-    const views    = Math.floor(Math.random() * 90000 + 5000);
-    const shares   = Math.floor(Math.random() * 500 + 10);
+    const likes    = Math.floor(Math.random() * 10000 + 200);
+    const views    = Math.floor(Math.random() * 500000 + 1000);
+    const shares   = Math.floor(Math.random() * 300 + 20);
 
     const data = {
       avatarUrl:   interaction.user.displayAvatarURL({ extension: 'png', size: 512 }),
-      displayName: interaction.user.username.replace(/_.*/,'').replace(/^./, s=>s.toUpperCase()),
+      displayName: interaction.user.username.replace(/_.*/, ''),
       handle:      interaction.user.username,
       text:        interaction.fields.getTextInputValue('tweet'),
       time, date,
-      comments, retweets, likes, views, shares
+      comments, retweets, likes, views, shares,
+      verified:    false,
+      badgeUrl:    'https://upload.wikimedia.org/wikipedia/commons/e/e4/Twitter_Verified_Badge.svg'
     };
 
     const img  = await generateImage(data);
