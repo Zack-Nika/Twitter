@@ -15,21 +15,18 @@ import {
 } from 'discord.js';
 
 // —— CONFIG ——
-// Make sure in your Railway/.env these are set to the pure snowflake values,
-// e.g. COMPOSER_CHANNEL_ID=1401334102019276850 (no leading '=' or quotes)
+const BOT_TOKEN           = process.env.BOT_TOKEN;
 const COMPOSER_CHANNEL_ID = process.env.COMPOSER_CHANNEL_ID;
 const FEED_CHANNEL_ID     = process.env.FEED_CHANNEL_ID;
 const WEBHOOK_ID          = process.env.WEBHOOK_ID;
 const WEBHOOK_TOKEN       = process.env.WEBHOOK_TOKEN;
-const BOT_TOKEN           = process.env.BOT_TOKEN;
 
 // Only allow the 🔃 reaction—others get removed
 const ALLOWED_EMOJIS = ['🔃'];
 
-// Load the dark template
+// Load the dark HTML template
 const tplDark = fs.readFileSync('tweet-template-dark.html', 'utf8');
 
-// Discord client + webhook
 const client = new Client({
   intents: [ GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessageReactions ],
   partials: [ Partials.Message, Partials.Channel, Partials.Reaction ]
@@ -43,25 +40,23 @@ function fmt(n) {
     : (n/1e3).toFixed(n < 1e4 ? 1 : 0) + 'K';
 }
 
-// Render the image via Puppeteer
 async function generateImage(data) {
   const html = tplDark
-    .replace(/{{AVATAR_URL}}/g,      data.avatarUrl)
-    .replace(/{{DISPLAY_NAME}}/g,    data.displayName)
-    .replace(/{{HANDLE}}/g,          data.handle)
-    .replace(/{{TEXT}}/g,            data.text)
-    .replace(/{{TIME}}/g,            data.time)
-    .replace(/{{DATE}}/g,            data.date)
-    .replace(/{{COMMENTS}}/g,        fmt(data.comments))
-    .replace(/{{RETWEETS}}/g,        fmt(data.retweets))
-    .replace(/{{LIKES}}/g,           fmt(data.likes))
-    .replace(/{{VIEWS}}/g,           fmt(data.views))
-    .replace(/{{SHARES}}/g,          fmt(data.shares))
-    .replace(/{{BADGE}}/g,           data.verified ? '<svg class="badge">…</svg>' : '');
+    .replace(/{{AVATAR_URL}}/g,   data.avatarUrl)
+    .replace(/{{DISPLAY_NAME}}/g, data.displayName)
+    .replace(/{{HANDLE}}/g,       data.handle)
+    .replace(/{{TEXT}}/g,         data.text)
+    .replace(/{{TIME}}/g,         data.time)
+    .replace(/{{DATE}}/g,         data.date)
+    .replace(/{{COMMENTS}}/g,     fmt(data.comments))
+    .replace(/{{RETWEETS}}/g,     fmt(data.retweets))
+    .replace(/{{LIKES}}/g,        fmt(data.likes))
+    .replace(/{{VIEWS}}/g,        fmt(data.views))
+    .replace(/{{SHARES}}/g,       fmt(data.shares));
 
   const browser = await puppeteer.launch({
     args: ['--no-sandbox','--disable-setuid-sandbox'],
-    defaultViewport: { width: 1600, height: 1400, deviceScaleFactor: 3 }
+    defaultViewport: { width: 1500, height: 1500, deviceScaleFactor: 3 }
   });
   const page = await browser.newPage();
   await page.setContent(html, { waitUntil: 'networkidle0' });
@@ -85,8 +80,8 @@ client.once('ready', async () => {
   }
 });
 
-client.on('interactionCreate', async i => {
-  if (i.isButton() && i.customId === 'open_dark') {
+client.on('interactionCreate', async interaction => {
+  if (interaction.isButton() && interaction.customId === 'open_dark') {
     const modal = new ModalBuilder()
       .setCustomId('tweet_dark')
       .setTitle('📝 Write Dark Tweet');
@@ -96,13 +91,12 @@ client.on('interactionCreate', async i => {
       .setStyle(TextInputStyle.Paragraph)
       .setRequired(true);
     modal.addComponents(new ActionRowBuilder().addComponents(input));
-    return i.showModal(modal);
+    return interaction.showModal(modal);
   }
 
-  if (i.isModalSubmit() && i.customId === 'tweet_dark') {
-    await i.deferReply({ ephemeral: true });
+  if (interaction.isModalSubmit() && interaction.customId === 'tweet_dark') {
+    await interaction.deferReply({ ephemeral: true });
 
-    // Moroccan time & date
     const now = new Date();
     const time = now.toLocaleTimeString('en-GB', {
       hour12: false, hour: '2-digit', minute: '2-digit',
@@ -113,21 +107,20 @@ client.on('interactionCreate', async i => {
       timeZone:'Africa/Casablanca'
     });
 
-    // Random metrics for realism
-    const comments = Math.floor(Math.random()*500 + 50);
-    const retweets = Math.floor(Math.random()*2000 + 200);
-    const likes    = Math.floor(Math.random()*8000 + 500);
-    const views    = Math.floor(Math.random()*90000 + 5000);
-    const shares   = Math.floor(Math.random()*500 + 30);
+    // Generate some realistic random stats
+    const comments = Math.floor(Math.random() * 500 + 20);
+    const retweets = Math.floor(Math.random() * 2000 + 100);
+    const likes    = Math.floor(Math.random() * 8000 + 300);
+    const views    = Math.floor(Math.random() * 90000 + 5000);
+    const shares   = Math.floor(Math.random() * 500 + 10);
 
     const data = {
-      avatarUrl:    i.user.displayAvatarURL({ extension:'png', size:512 }),
-      displayName:  i.user.username.replace(/_.*/,''),
-      handle:       i.user.username,
-      text:         i.fields.getTextInputValue('tweet'),
+      avatarUrl:   interaction.user.displayAvatarURL({ extension: 'png', size: 512 }),
+      displayName: interaction.user.username.replace(/_.*/,'').replace(/^./, s=>s.toUpperCase()),
+      handle:      interaction.user.username,
+      text:        interaction.fields.getTextInputValue('tweet'),
       time, date,
-      comments, retweets, likes, views, shares,
-      verified:     false
+      comments, retweets, likes, views, shares
     };
 
     const img  = await generateImage(data);
@@ -136,7 +129,7 @@ client.on('interactionCreate', async i => {
     const full = await feed.messages.fetch(sent.id);
     for (const emo of ALLOWED_EMOJIS) await full.react(emo);
 
-    await i.editReply({ content: '✅ Your dark-mode tweet is live!', ephemeral: true });
+    await interaction.editReply({ content: '✅ Your dark-mode tweet is live!', ephemeral: true });
   }
 });
 
