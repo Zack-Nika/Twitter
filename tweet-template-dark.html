@@ -1,186 +1,151 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <style>
     body {
       margin: 0;
       background: #000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
       font-family: "Segoe UI", sans-serif;
-      color: #e1e8ed;
     }
     .tweet-card {
-      background: #000;
+      background: #15202b;
       border-radius: 16px;
-      padding: 24px;
-      width: 1200px;
-      box-sizing: border-box;
+      width: 600px;
+      padding: 16px;
+      color: #e1e8ed;
+      position: relative;
     }
+
+    /* HEADER */
     .header {
       display: flex;
       align-items: center;
-      position: relative;
     }
     .avatar {
-      width: 96px;
-      height: 96px;
+      width: 48px;
+      height: 48px;
       border-radius: 50%;
-      margin-right: 16px;
+      margin-right: 12px;
     }
-    .user-info {
-      display: flex;
-      flex-direction: column;
-    }
-    .display-line {
+    .user-line {
       display: flex;
       align-items: center;
-      font-size: 42px;
+      flex-wrap: wrap;
+    }
+    .display-name {
+      font-size: 18px;
       font-weight: 700;
       color: #fff;
+      margin-right: 6px;
     }
-    .display-line .verify {
-      width: 28px;
-      height: 28px;
-      margin-left: 8px;
+    .display-name .badge {
+      width: 18px;
+      height: 18px;
+      margin-left: 4px;
     }
-    .handle {
-      font-size: 28px;
+    .handle,
+    .timestamp {
+      font-size: 15px;
       color: #8899a6;
-      margin-top: 4px;
+      margin-right: 6px;
     }
-    .ellipsis {
+
+    /* THREE-DOT MENU */
+    .more {
       position: absolute;
-      right: 0;
-      top: 0;
-    }
-    .ellipsis .icon {
+      top: 16px;
+      right: 16px;
       width: 24px;
       height: 24px;
-      stroke: #8899a6;
+      fill: #8899a6;
+      cursor: pointer;
     }
+
+    /* CONTENT */
     .content {
-      margin: 24px 0;
-      font-size: 48px;
+      font-size: 20px;
+      margin: 12px 0;
       line-height: 1.4;
-      white-space: pre-wrap;
-      word-break: break-word;
     }
-    .timestamp {
-      font-size: 24px;
-      color: #8899a6;
-      margin-bottom: 24px;
-    }
+
+    /* STATS ROW (no border-top) */
     .stats {
       display: flex;
       justify-content: space-between;
-      border-top: 1px solid #38444d;
-      padding-top: 16px;
+      margin-top: 12px;
     }
-    .stats div {
+    .stat {
       display: flex;
       align-items: center;
-      font-size: 24px;
+      font-size: 15px;
       color: #8899a6;
     }
-    .stats div + div {
-      margin-left: 48px;
-    }
-    .stats .icon {
-      width: 24px;
-      height: 24px;
-      margin-right: 8px;
-      stroke: #8899a6;
-    }
-    .stats .icon.fill {
+    .stat svg {
+      width: 22px;
+      height: 22px;
+      margin-right: 4px;
       fill: #8899a6;
-      stroke: none;
     }
   </style>
 </head>
 <body>
   <div class="tweet-card">
+    <!-- header: avatar + name/handle/timestamp -->
     <div class="header">
-      <img src="{{AVATAR_URL}}" class="avatar" />
-
-      <div class="user-info">
-        <div class="display-line">
+      <img src="{{AVATAR_URL}}" class="avatar" alt="avatar" />
+      <div class="user-line">
+        <div class="display-name">
           {{DISPLAY_NAME}}
-          {{BADGE}}
+          {{#if VERIFIED}}
+            <!-- paste your blue badge SVG here -->
+            <svg class="badge" viewBox="0 0 24 24">…badge paths…</svg>
+          {{/if}}
         </div>
         <div class="handle">@{{HANDLE}}</div>
-      </div>
-
-      <div class="ellipsis">
-        <!-- Ellipsis (⋯) menu -->
-        <svg class="icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z"/>
-        </svg>
+        <div class="timestamp">{{TIME}} · {{DATE}}</div>
       </div>
     </div>
 
-    <div class="content">{{TEXT}}</div>
-    <div class="timestamp">{{TIME}} · {{DATE}}</div>
+    <!-- three-dot “more” menu -->
+    <svg class="more" viewBox="0 0 24 24">
+      <circle cx="5" cy="12" r="2"/>
+      <circle cx="12" cy="12" r="2"/>
+      <circle cx="19" cy="12" r="2"/>
+    </svg>
 
+    <!-- tweet text -->
+    <div class="content">{{TEXT}}</div>
+
+    <!-- stats -->
     <div class="stats">
-      <!-- Comments -->
-      <div>
-        <svg class="icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                d="M12 20.25c4.97 0 9-3.694 9-8.25s-4.03-8.25-9-8.25S3 7.444 3 12c0 2.104.859 4.023 2.273 5.48.432.447.74 1.04.586 1.641a4.483 4.483 0 0 1-.923 1.785A5.969 5.969 0 0 0 6 21c1.282 0 2.47-.402 3.445-1.087.81.22 1.668.337 2.555.337Z"/>
-        </svg>
+      <div class="stat">
+        <!-- comment -->
+        <svg viewBox="0 0 24 24"><path d="M3 10h4v4H3v-4zm0-6h18v14H3V4zm2 2v10h14V6H5z"/></svg>
         {{COMMENTS}}
       </div>
-
-      <!-- Retweets -->
-      <div>
-        <svg class="icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                d="M16.862 4.487l-4.5-3 .105 3.241M7.139 19.513l4.5 3-.105-3.241M3.75 7.5h7.5V3m9 13.5h-7.5v4.5"/>
-        </svg>
+      <div class="stat">
+        <!-- retweet -->
+        <svg viewBox="0 0 24 24"><path d="M4 4v6h2V8h12v8H6v-2H4v6h16V4H4z"/></svg>
         {{RETWEETS}}
       </div>
-
-      <!-- Likes -->
-      <div>
-        <svg class="icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path class="icon fill" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597
-            1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313
-            -2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9
-            12s9-4.78 9-12Z"/>
-        </svg>
+      <div class="stat">
+        <!-- heart -->
+        <svg viewBox="0 0 24 24"><path d="M12 21l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.18L12 21z"/></svg>
         {{LIKES}}
       </div>
-
-      <!-- Views -->
-      <div>
-        <svg class="icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                d="M2.036 12.322a1.012 1.012 0 0 1
-                0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638
-                0 8.573 3.007 9.963 7.178.07.207.07.431
-                0 .639C20.577 16.49 16.64 19.5 12
-                19.5c-4.638 0-8.573-3.007-9.963-7.178Z"/>
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
-        </svg>
+      <div class="stat">
+        <!-- view -->
+        <svg viewBox="0 0 24 24"><path d="M12 4.5C7.36 4.5 3.42 7.51 2.04 11.68c-.07.21-.07.43 0 .64C3.43 16.49 7.36 19.5 12 19.5s8.57-3.01 9.96-7.18c.07-.21.07-.43 0-.64C20.57 7.51 16.64 4.5 12 4.5zm0 12a3 3 0 110-6 3 3 0 010 6z"/></svg>
         {{VIEWS}}
       </div>
-
-      <!-- Shares -->
-      <div>
-        <svg class="icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                d="M7.217 10.907a2.25 2.25 0 1 0
-                0 2.186m0-2.186c.18.324.283.696.283
-                1.093s-.103.77-.283 1.093m0-2.186
-                9.566-5.314m-9.566 7.5 9.566
-                5.314m0 0a2.25 2.25 0 1 0
-                3.935 2.186 2.25 2.25 0 0
-                0-3.935-2.186Zm0-12.814a2.25
-                2.25 0 1 0 3.933-2.185 2.25
-                2.25 0 0 0-3.933 2.185Z"/>
-        </svg>
+      <div class="stat">
+        <!-- share -->
+        <svg viewBox="0 0 24 24"><path d="M7.22 10.91a2.25 2.25 0 100 2.19m0-2.19c.18.32.28.7.28 1.09s-.1.77-.28 1.09M16 4l-9.56 5.31m9.56 7.5L6.44 8.81m9.56 11.69a2.25 2.25 0 113.93-2.19"/><path d="M20.5 3.5l-16 17"/></svg>
         {{SHARES}}
       </div>
     </div>
