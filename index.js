@@ -2,6 +2,7 @@
 import 'dotenv/config';
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import puppeteer from 'puppeteer';
 import {
   Client,
@@ -16,19 +17,22 @@ import {
   WebhookClient
 } from 'discord.js';
 
+// — fix ESM __dirname —
+const __filename = fileURLToPath(import.meta.url);
+const __dirname  = path.dirname(__filename);
+
 // —— CONFIG ——
-const {
-  BOT_TOKEN,
-  COMPOSER_CHANNEL_ID,
-  FEED_CHANNEL_ID,
-  WEBHOOK_ID,
-  WEBHOOK_TOKEN
-} = process.env;
+// Make sure these are defined in your .env or Railway environment
+const BOT_TOKEN             = process.env.BOT_TOKEN;
+const COMPOSER_CHANNEL_ID   = process.env.COMPOSER_CHANNEL_ID;
+const FEED_CHANNEL_ID       = process.env.FEED_CHANNEL_ID;
+const WEBHOOK_ID            = process.env.WEBHOOK_ID;
+const WEBHOOK_TOKEN         = process.env.WEBHOOK_TOKEN;
 
 // Only allow the 🔃 reaction—others get removed
 const ALLOWED_EMOJIS = ['🔃'];
 
-// Load our dark tweet HTML template
+// Load the dark HTML template
 const tplDark = fs.readFileSync(
   path.resolve(__dirname, 'tweet-template-dark.html'),
   'utf8'
@@ -38,67 +42,61 @@ const tplDark = fs.readFileSync(
 function fmt(n) {
   return n < 1e3
     ? n.toString()
-    : (n / 1e3).toFixed(n < 1e4 ? 1 : 0) + 'K';
+    : (n/1e3).toFixed(n < 1e4 ? 1 : 0) + 'K';
 }
 
-// Render the tweet card as an image
+// Render the image via Puppeteer
 async function generateImage(data) {
-  // interpolate our Handlebars-style placeholders
-  let html = tplDark
-    .replace(/{{AVATAR_URL}}/g, data.avatarUrl)
+  const html = tplDark
+    .replace(/{{AVATAR_URL}}/g,   data.avatarUrl)
     .replace(/{{DISPLAY_NAME}}/g, data.displayName)
-    .replace(/{{HANDLE}}/g, data.handle)
-    .replace(/{{TEXT}}/g, data.text)
-    .replace(/{{TIME}}/g, data.time)
-    .replace(/{{DATE}}/g, data.date)
-    .replace(/{{COMMENTS}}/g, fmt(data.comments))
-    .replace(/{{RETWEETS}}/g, fmt(data.retweets))
-    .replace(/{{LIKES}}/g, fmt(data.likes))
-    .replace(/{{VIEWS}}/g, fmt(data.views))
-    .replace(/{{SHARES}}/g, fmt(data.shares))
-    .replace(/{{#if VERIFIED}}/g, data.verified ? '' : '<!--')
-    .replace(/{{\/if}}/g, data.verified ? '' : '-->');
+    .replace(/{{HANDLE}}/g,       data.handle)
+    .replace(/{{TEXT}}/g,         data.text)
+    .replace(/{{TIME}}/g,         data.time)
+    .replace(/{{DATE}}/g,         data.date)
+    .replace(/{{COMMENTS}}/g,     fmt(data.comments))
+    .replace(/{{RETWEETS}}/g,     fmt(data.retweets))
+    .replace(/{{LIKES}}/g,        fmt(data.likes))
+    .replace(/{{VIEWS}}/g,        fmt(data.views))
+    .replace(/{{SHARES}}/g,       fmt(data.shares))
+    .replace(/{{BADGE}}/g,        data.verified
+      ? `<img src="path/to/verified-badge.svg" class="badge" />`
+      : '');
 
   const browser = await puppeteer.launch({
-    args: ['--no-sandbox', '--disable-setuid-sandbox'],
-    defaultViewport: { width: 600, height: 400, deviceScaleFactor: 2 }
+    args: ['--no-sandbox','--disable-setuid-sandbox'],
+    defaultViewport: { width: 1600, height: 1400, deviceScaleFactor: 3 }
   });
   const page = await browser.newPage();
   await page.setContent(html, { waitUntil: 'networkidle0' });
   const card = await page.$('.tweet-card');
-
-  // keep the black rounded corners intact:
-  const buffer = await card.screenshot({ omitBackground: false });
+  const buffer = await card.screenshot({ omitBackground: true });
   await browser.close();
   return buffer;
 }
 
-// —— Discord Setup ——
+// Discord client + webhook
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessageReactions],
-  partials: [Partials.Message, Partials.Channel, Partials.Reaction]
+  intents: [ GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessageReactions ],
+  partials: [ Partials.Message, Partials.Channel, Partials.Reaction ]
 });
 const hook = new WebhookClient({ id: WEBHOOK_ID, token: WEBHOOK_TOKEN });
 
 client.once('ready', async () => {
   const composer = await client.channels.fetch(COMPOSER_CHANNEL_ID);
-  // if not already pinned, send our “Compose” button
   if (!(await composer.messages.fetchPinned()).size) {
     const darkBtn = new ButtonBuilder()
       .setCustomId('open_dark')
       .setLabel('⚫️ Dark Tweet')
       .setStyle(ButtonStyle.Primary);
 
-    await composer
-      .send({
-        content: '**Compose your tweet**',
-        components: [new ActionRowBuilder().addComponents(darkBtn)]
-      })
-      .then(m => m.pin());
+    await composer.send({
+      content: '**Compose your tweet**',
+      components: [ new ActionRowBuilder().addComponents(darkBtn) ]
+    }).then(m => m.pin());
   }
 });
 
-// handle button → modal → submit flow
 client.on('interactionCreate', async i => {
   if (i.isButton() && i.customId === 'open_dark') {
     const modal = new ModalBuilder()
@@ -116,49 +114,36 @@ client.on('interactionCreate', async i => {
   if (i.isModalSubmit() && i.customId === 'tweet_dark') {
     await i.deferReply({ ephemeral: true });
 
-    // get current time in Casablanca
+    // Moroccan time & date
     const now = new Date();
     const time = now.toLocaleTimeString('en-GB', {
-      hour12: false,
-      hour: '2-digit',
-      minute: '2-digit',
+      hour12: false, hour: '2-digit', minute: '2-digit',
       timeZone: 'Africa/Casablanca'
     });
     const date = now.toLocaleDateString('en-GB', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      timeZone: 'Africa/Casablanca'
+      day:'2-digit', month:'2-digit', year:'numeric',
+      timeZone:'Africa/Casablanca'
     });
 
-    // random metrics
-    const comments = Math.floor(Math.random() * 500 + 50);
-    const retweets = Math.floor(Math.random() * 2000 + 200);
-    const likes = Math.floor(Math.random() * 8000 + 500);
-    const views = Math.floor(Math.random() * 90000 + 5000);
-    const shares = Math.floor(Math.random() * 500 + 30);
+    // Random metrics for realism
+    const comments = Math.floor(Math.random()*500 + 50);
+    const retweets = Math.floor(Math.random()*2000 + 200);
+    const likes    = Math.floor(Math.random()*8000 + 500);
+    const views    = Math.floor(Math.random()*90000 + 5000);
+    const shares   = Math.floor(Math.random()*500 + 30);
 
-    // build our data payload
     const data = {
-      avatarUrl: i.user.displayAvatarURL({ extension: 'png', size: 512 }),
-      displayName: i.user.username.replace(/_.*/, ''), // strip after underscore
-      handle: i.user.username,
-      text: i.fields.getTextInputValue('tweet'),
-      time,
-      date,
-      comments,
-      retweets,
-      likes,
-      views,
-      shares,
-      verified: false // toggle if you want that blue badge
+      avatarUrl:   i.user.displayAvatarURL({ extension:'png', size:512 }),
+      displayName: i.user.username.replace(/_.*/, ''),  // Franco from im_franco
+      handle:      i.user.username,
+      text:        i.fields.getTextInputValue('tweet'),
+      time, date,
+      comments, retweets, likes, views, shares,
+      verified:    false  // or some logic to set true
     };
 
-    // generate & send image via webhook
-    const img = await generateImage(data);
+    const img  = await generateImage(data);
     const sent = await hook.send({ files: [img] });
-
-    // react with 🔃 for your feed channel
     const feed = await client.channels.fetch(FEED_CHANNEL_ID);
     const full = await feed.messages.fetch(sent.id);
     for (const emo of ALLOWED_EMOJIS) await full.react(emo);
