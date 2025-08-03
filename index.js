@@ -1,5 +1,7 @@
+// index.js
 import 'dotenv/config';
 import fs from 'fs';
+import path from 'path';
 import puppeteer from 'puppeteer';
 import {
   Client,
@@ -14,66 +16,73 @@ import {
   WebhookClient
 } from 'discord.js';
 
-// —— CONFIG ——  
-const BOT_TOKEN           = process.env.BOT_TOKEN;
-const COMPOSER_CHANNEL_ID = process.env.COMPOSER_CHANNEL_ID;
-const FEED_CHANNEL_ID     = process.env.FEED_CHANNEL_ID;
-const WEBHOOK_ID          = process.env.WEBHOOK_ID;
-const WEBHOOK_TOKEN       = process.env.WEBHOOK_TOKEN;
+// —— CONFIG ——
+const {
+  BOT_TOKEN,
+  COMPOSER_CHANNEL_ID,
+  FEED_CHANNEL_ID,
+  WEBHOOK_ID,
+  WEBHOOK_TOKEN
+} = process.env;
 
-// Only allow the 🔃 reaction—others get removed  
+// Only allow the 🔃 reaction—others get removed
 const ALLOWED_EMOJIS = ['🔃'];
 
-// Load the dark template  
-const tplDark = fs.readFileSync('tweet-template-dark.html','utf8');
+// Load our dark tweet HTML template
+const tplDark = fs.readFileSync(
+  path.resolve(__dirname, 'tweet-template-dark.html'),
+  'utf8'
+);
 
+// Format numbers: 0–999 → “123”, 1 000+ → “1.2K” or “15K”
+function fmt(n) {
+  return n < 1e3
+    ? n.toString()
+    : (n / 1e3).toFixed(n < 1e4 ? 1 : 0) + 'K';
+}
+
+// Render the tweet card as an image
+async function generateImage(data) {
+  // interpolate our Handlebars-style placeholders
+  let html = tplDark
+    .replace(/{{AVATAR_URL}}/g, data.avatarUrl)
+    .replace(/{{DISPLAY_NAME}}/g, data.displayName)
+    .replace(/{{HANDLE}}/g, data.handle)
+    .replace(/{{TEXT}}/g, data.text)
+    .replace(/{{TIME}}/g, data.time)
+    .replace(/{{DATE}}/g, data.date)
+    .replace(/{{COMMENTS}}/g, fmt(data.comments))
+    .replace(/{{RETWEETS}}/g, fmt(data.retweets))
+    .replace(/{{LIKES}}/g, fmt(data.likes))
+    .replace(/{{VIEWS}}/g, fmt(data.views))
+    .replace(/{{SHARES}}/g, fmt(data.shares))
+    .replace(/{{#if VERIFIED}}/g, data.verified ? '' : '<!--')
+    .replace(/{{\/if}}/g, data.verified ? '' : '-->');
+
+  const browser = await puppeteer.launch({
+    args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    defaultViewport: { width: 600, height: 400, deviceScaleFactor: 2 }
+  });
+  const page = await browser.newPage();
+  await page.setContent(html, { waitUntil: 'networkidle0' });
+  const card = await page.$('.tweet-card');
+
+  // keep the black rounded corners intact:
+  const buffer = await card.screenshot({ omitBackground: false });
+  await browser.close();
+  return buffer;
+}
+
+// —— Discord Setup ——
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessageReactions],
   partials: [Partials.Message, Partials.Channel, Partials.Reaction]
 });
 const hook = new WebhookClient({ id: WEBHOOK_ID, token: WEBHOOK_TOKEN });
 
-// Format numbers: 0–999 → “123”, 1 000+ → “1.2K” or “15K”
-function fmt(n) {
-  return n < 1e3
-    ? n.toString()
-    : (n/1e3).toFixed(n < 1e4 ? 1 : 0) + 'K';
-}
-
-async function generateImage(data) {
-  // Insert all placeholders into the template
-  const html = tplDark
-    .replace(/{{AVATAR_URL}}/g,   data.avatarUrl)
-    .replace(/{{DISPLAY_NAME}}/g, data.displayName)
-    .replace(/{{HANDLE}}/g,       data.handle)
-    .replace(/{{TEXT}}/g,         data.text)
-    .replace(/{{TIME}}/g,         data.time)
-    .replace(/{{DATE}}/g,         data.date)
-    .replace(/{{COMMENTS}}/g,     fmt(data.comments))
-    .replace(/{{RETWEETS}}/g,     fmt(data.retweets))
-    .replace(/{{LIKES}}/g,        fmt(data.likes))
-    .replace(/{{VIEWS}}/g,        fmt(data.views))
-    .replace(/{{SHARES}}/g,       fmt(data.shares))
-    .replace(/{{BADGE}}/g,
-      data.verified
-        ? `<img src="${data.badgeUrl}" class="verify" />`
-        : ''
-    );
-
-  const browser = await puppeteer.launch({
-    args: ['--no-sandbox','--disable-setuid-sandbox'],
-    defaultViewport: { width: 1200, height: 800, deviceScaleFactor: 2 }
-  });
-  const page = await browser.newPage();
-  await page.setContent(html, { waitUntil: 'networkidle0' });
-  const card = await page.$('.tweet-card');
-  const buffer = await card.screenshot({ omitBackground: true });
-  await browser.close();
-  return buffer;
-}
-
 client.once('ready', async () => {
   const composer = await client.channels.fetch(COMPOSER_CHANNEL_ID);
+  // if not already pinned, send our “Compose” button
   if (!(await composer.messages.fetchPinned()).size) {
     const darkBtn = new ButtonBuilder()
       .setCustomId('open_dark')
@@ -89,8 +98,9 @@ client.once('ready', async () => {
   }
 });
 
-client.on('interactionCreate', async interaction => {
-  if (interaction.isButton() && interaction.customId === 'open_dark') {
+// handle button → modal → submit flow
+client.on('interactionCreate', async i => {
+  if (i.isButton() && i.customId === 'open_dark') {
     const modal = new ModalBuilder()
       .setCustomId('tweet_dark')
       .setTitle('📝 Write Dark Tweet');
@@ -100,48 +110,60 @@ client.on('interactionCreate', async interaction => {
       .setStyle(TextInputStyle.Paragraph)
       .setRequired(true);
     modal.addComponents(new ActionRowBuilder().addComponents(input));
-    return interaction.showModal(modal);
+    return i.showModal(modal);
   }
 
-  if (interaction.isModalSubmit() && interaction.customId === 'tweet_dark') {
-    await interaction.deferReply({ ephemeral: true });
+  if (i.isModalSubmit() && i.customId === 'tweet_dark') {
+    await i.deferReply({ ephemeral: true });
 
-    // Capture local time/date in Casablanca
+    // get current time in Casablanca
     const now = new Date();
     const time = now.toLocaleTimeString('en-GB', {
-      hour12: false, hour: '2-digit', minute: '2-digit',
+      hour12: false,
+      hour: '2-digit',
+      minute: '2-digit',
       timeZone: 'Africa/Casablanca'
     });
     const date = now.toLocaleDateString('en-GB', {
-      day: '2-digit', month: '2-digit', year: 'numeric',
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
       timeZone: 'Africa/Casablanca'
     });
 
-    // Random metrics for realism
+    // random metrics
     const comments = Math.floor(Math.random() * 500 + 50);
-    const retweets = Math.floor(Math.random() * 2000 + 100);
-    const likes    = Math.floor(Math.random() * 10000 + 200);
-    const views    = Math.floor(Math.random() * 500000 + 1000);
-    const shares   = Math.floor(Math.random() * 300 + 20);
+    const retweets = Math.floor(Math.random() * 2000 + 200);
+    const likes = Math.floor(Math.random() * 8000 + 500);
+    const views = Math.floor(Math.random() * 90000 + 5000);
+    const shares = Math.floor(Math.random() * 500 + 30);
 
+    // build our data payload
     const data = {
-      avatarUrl:   interaction.user.displayAvatarURL({ extension: 'png', size: 512 }),
-      displayName: interaction.user.username.replace(/_.*/, ''),
-      handle:      interaction.user.username,
-      text:        interaction.fields.getTextInputValue('tweet'),
-      time, date,
-      comments, retweets, likes, views, shares,
-      verified:    false,
-      badgeUrl:    'https://upload.wikimedia.org/wikipedia/commons/e/e4/Twitter_Verified_Badge.svg'
+      avatarUrl: i.user.displayAvatarURL({ extension: 'png', size: 512 }),
+      displayName: i.user.username.replace(/_.*/, ''), // strip after underscore
+      handle: i.user.username,
+      text: i.fields.getTextInputValue('tweet'),
+      time,
+      date,
+      comments,
+      retweets,
+      likes,
+      views,
+      shares,
+      verified: false // toggle if you want that blue badge
     };
 
-    const img  = await generateImage(data);
+    // generate & send image via webhook
+    const img = await generateImage(data);
     const sent = await hook.send({ files: [img] });
+
+    // react with 🔃 for your feed channel
     const feed = await client.channels.fetch(FEED_CHANNEL_ID);
     const full = await feed.messages.fetch(sent.id);
     for (const emo of ALLOWED_EMOJIS) await full.react(emo);
 
-    await interaction.editReply({ content: '✅ Your dark-mode tweet is live!', ephemeral: true });
+    await i.editReply({ content: '✅ Your dark-mode tweet is live!', ephemeral: true });
   }
 });
 
