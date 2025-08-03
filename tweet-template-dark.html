@@ -2,32 +2,29 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Tweet Card (Dark)</title>
   <style>
-    /* ---------- overall ---------- */
     body {
       margin: 0;
       background: #000;
       display: flex;
       justify-content: center;
       align-items: center;
-      min-height: 100vh;
+      height: 100vh;
       font-family: "Segoe UI", sans-serif;
     }
     .tweet-card {
       background: #15202b;
-      color: #e1e8ed;
       border-radius: 16px;
       width: 600px;
-      padding: 16px 20px;
+      padding: 16px;
+      color: #e1e8ed;
       position: relative;
     }
 
-    /* ---------- header ---------- */
+    /* HEADER */
     .header {
       display: flex;
       align-items: center;
-      margin-bottom: 12px;
     }
     .avatar {
       width: 48px;
@@ -45,6 +42,7 @@
       font-weight: 700;
       display: flex;
       align-items: center;
+      color: #fff;
     }
     .display-name .badge {
       width: 18px;
@@ -56,20 +54,22 @@
       color: #8899a6;
       margin-top: 2px;
     }
-    .more-menu {
+
+    /* “More” menu (three dots) */
+    .more {
       position: absolute;
       top: 16px;
-      right: 20px;
+      right: 16px;
       width: 24px;
       height: 24px;
       fill: #8899a6;
       cursor: pointer;
     }
 
-    /* ---------- content & timestamp ---------- */
+    /* CONTENT & TIMESTAMP */
     .content {
       font-size: 20px;
-      margin-bottom: 10px;
+      margin: 12px 0;
       line-height: 1.4;
     }
     .timestamp {
@@ -78,7 +78,7 @@
       margin-bottom: 12px;
     }
 
-    /* ---------- stats row ---------- */
+    /* STATS ROW */
     .stats {
       display: flex;
       justify-content: space-between;
@@ -95,7 +95,6 @@
       height: 20px;
       margin-right: 6px;
       fill: #8899a6;
-      flex-shrink: 0;
     }
   </style>
 </head>
@@ -108,50 +107,51 @@
         <div class="display-name">
           {{DISPLAY_NAME}}
           {{#if VERIFIED}}
-            <img src="{{BADGE_URL}}" class="badge" alt="verified badge" />
+            <!-- inline your downloaded badge SVG here: -->
+            <svg class="badge" viewBox="0 0 24 24">…your badge paths…</svg>
           {{/if}}
         </div>
         <div class="handle">@{{HANDLE}}</div>
       </div>
     </div>
 
-    <!-- “more” menu icon (three dots) -->
-    <svg class="more-menu" viewBox="0 0 24 24">
-      <circle cx="5" cy="12" r="2"></circle>
-      <circle cx="12" cy="12" r="2"></circle>
-      <circle cx="19" cy="12" r="2"></circle>
+    <!-- three-dot “more” menu -->
+    <svg class="more" viewBox="0 0 24 24">
+      <circle cx="5" cy="12" r="2" />
+      <circle cx="12" cy="12" r="2" />
+      <circle cx="19" cy="12" r="2" />
     </svg>
 
-    <!-- tweet text -->
+    <!-- text -->
     <div class="content">{{TEXT}}</div>
 
     <!-- timestamp -->
     <div class="timestamp">{{TIME}} · {{DATE}}</div>
 
-    <!-- stats row -->
+    <!-- stats -->
     <div class="stats">
       <div class="stat">
-        <!-- comment icon -->
+        <!-- comment -->
         <svg viewBox="0 0 24 24"><path d="M3 10h4v4H3v-4zm0-6h18v14H3V4zm2 2v10h14V6H5z"/></svg>
         {{COMMENTS}}
       </div>
       <div class="stat">
-        <!-- retweet icon -->
+        <!-- retweet -->
         <svg viewBox="0 0 24 24"><path d="M4 4v6h2V8h12v8H6v-2H4v6h16V4H4z"/></svg>
         {{RETWEETS}}
       </div>
       <div class="stat">
-        <!-- heart icon -->
+        <!-- heart -->
         <svg viewBox="0 0 24 24"><path d="M12 21l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.18L12 21z"/></svg>
         {{LIKES}}
       </div>
       <div class="stat">
-        <!-- view icon -->
+        <!-- view -->
         <svg viewBox="0 0 24 24"><path d="M12 4.5C7.36 4.5 3.42 7.51 2.04 11.68c-.07.21-.07.43 0 .64C3.43 16.49 7.36 19.5 12 19.5s8.57-3.01 9.96-7.18c.07-.21.07-.43 0-.64C20.57 7.51 16.64 4.5 12 4.5zm0 12a3 3 0 110-6 3 3 0 010 6z"/></svg>
         {{VIEWS}}
       </div>
       <div class="stat">
-        <!-- share icon -->
+        <!-- share -->
         <svg viewBox="0 0 24 24"><path d="M7.22 10.91a2.25 2.25 0 100 2.19m0-2.19c.18.32.28.7.28 1.09s-.1.77-.28 1.09M16 4l-9.56 5.31m9.56 7.5L6.44 8.81m9.56 11.69a2.25 2.25 0 113.93-2.19"/><path d="M20.5 3.5l-16 17"/></svg>
         {{SHARES}}
       </div>
